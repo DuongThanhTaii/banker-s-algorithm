@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banker's Algorithm</title>
+  <link rel="shortcut icon" href="assets/img/CNTT.png" type="image/x-icon">
+  <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+<body>
+  <h1 class="title">Banker's Algorithm</h1>
+  <p class="subtitle">Nhập số lượng <span class="red">tiến trình</span> và <span class="green">tài nguyên</span></p>
+
+  <form id="inputForm" onsubmit="generateInputs(event)">
+    <div class="input-group">
+      <input type="number" id="numProcesses" value="3" required>
+      <label for="numProcesses">Tiến Trình</label>
+    </div>
+    <div class="input-group">
+      <input type="number" id="numResources" min="1" value="1" required>
+      <label for="numResources">Loại Tài Nguyên</label>
+    </div>
+    <button type="submit" class="button">Set</button>
+  </form>
+
+  <form id="detailsForm" style="display: none" onsubmit="initSimulation(event)">
+    <div id="processInputs"></div>
+    <div id="availableInputs"></div><br>
+    <button type="submit" class="button">Bắt Đầu</button>
+  </form>
+
+  <div id="processes"></div>
+
+  <div id="available-box" style="display: none">
+    <div id="available-image-container">
+      <img src="./assets/img/banklogo1.png" alt="Resources" id="available-image">
+      <span id="available-text">${available.join(', ')}</span>
+      <div id="controls" class="btn-next" style="display:none">
+        <button onclick="nextStep()" class="magic-button">Nhấn Em Đi</button>
+      </div>
+    </div>
+    
+  </div>
+
+
+  <div id="status"></div>
+
+  <button id="resetBtn" class="button" onclick="location.reload()">Reset</button>
+  <button id="randomBtn" class="button" onclick="generateRandomExample()">Random Mẫu</button>
+
+  <audio id="doneSound" src="./assets/mp3/donesound.mp3"></audio>
+  <audio id="failSound" src="https://www.myinstants.com/media/sounds/windows-error.mp3"></audio>
+
+  <div id="info" style="margin-top: 10px; font-family: monospace;"></div>
+
+  <script src="./assets/js/scripts.js"></script>
+</body>
+</html>
