@@ -7,71 +7,76 @@ let deadlockCounter = 0;
 
 function generateInputs(event) {
   if (event && event.preventDefault) event.preventDefault();
-  numProcesses = parseInt(document.getElementById('numProcesses').value);
-  numResources = parseInt(document.getElementById('numResources').value);
+  numProcesses = parseInt(document.getElementById('numProcesses').value, 10);
+  numResources = parseInt(document.getElementById('numResources').value, 10);
 
   const procDiv = document.getElementById('processInputs');
   const availDiv = document.getElementById('availableInputs');
   procDiv.innerHTML = '';
   availDiv.innerHTML = '';
 
+  // Tạo inputs Alloc và Max theo numResources
   for (let i = 0; i < numProcesses; i++) {
-    const container = document.createElement('div');
-    container.className = 'subtitle';
-
-    const allocGroup = document.createElement('div');
-    allocGroup.className = 'input-group';
-    allocGroup.innerHTML = `<input type='number' id='alloc-${i}' value='0' required><label for='alloc-${i}'>P${i} Alloc</label>`;
-
-    const maxGroup = document.createElement('div');
-    maxGroup.className = 'input-group';
-    maxGroup.innerHTML = `<input type='number' id='max-${i}' value='0' required><label for='max-${i}'>P${i} Max</label>`;
-
-    container.appendChild(allocGroup);
-    container.appendChild(maxGroup);
+    const container = document.createElement('div'); container.className = 'subtitle';
+    container.innerHTML = `<strong>P${i}</strong>`;
+    for (let j = 0; j < numResources; j++) {
+      const allocGroup = document.createElement('div'); allocGroup.className = 'input-group';
+      allocGroup.innerHTML = `
+        <input type='number' id='alloc-${i}-${j}' value='0' step='1' required>
+        <label for='alloc-${i}-${j}'>Alloc R${j}</label>
+      `;
+      const maxGroup = document.createElement('div'); maxGroup.className = 'input-group';
+      maxGroup.innerHTML = `
+        <input type='number' id='max-${i}-${j}' value='0' step='1' required>
+        <label for='max-${i}-${j}'>Max R${j}</label>
+      `;
+      container.appendChild(allocGroup);
+      container.appendChild(maxGroup);
+    }
     procDiv.appendChild(container);
   }
-  
-  const availContainer  = document.createElement('div');
-  availContainer.className = 'subtitle';
+
+  // Available inputs
+  const availContainer = document.createElement('div'); availContainer.className = 'subtitle';
+  availContainer.innerHTML = `<strong>Available</strong>`;
   for (let j = 0; j < numResources; j++) {
-    const group = document.createElement('div');
-    group.className = 'input-group';
-  group.innerHTML = `<input type='number' id='avail-${j}' value='0' required>
-                     <label for='avail-${j}'>Resource ${j}</label>`;
-  availContainer.appendChild(group);
+    const group = document.createElement('div'); group.className = 'input-group';
+    group.innerHTML = `
+      <input type='number' id='avail-${j}' value='0' step='1' required>
+      <label for='avail-${j}'>R${j}</label>
+    `;
+    availContainer.appendChild(group);
   }
   availDiv.appendChild(availContainer);
 
   document.getElementById('detailsForm').style.display = 'block';
 
-  // Cuộn chuột tăng step
+  // scroll wheel support
   document.querySelectorAll('input[type=number]').forEach(input => {
     input.addEventListener('wheel', e => {
       e.preventDefault();
-      if (e.deltaY < 0) input.stepUp();
-      else input.stepDown();
+      if (e.deltaY < 0) input.stepUp(); else input.stepDown();
     });
   });
-
 }
 
 function initSimulation(event) {
   if (event && event.preventDefault) event.preventDefault();
 
   allocation = Array.from({ length: numProcesses }, (_, i) =>
-    Array.from({ length: numResources }, (_, j) => parseInt(document.getElementById(`alloc-${i}`).value))
+    Array.from({ length: numResources }, (_, j) => parseInt(document.getElementById(`alloc-${i}-${j}`).value, 10))
   );
   maxDemand = Array.from({ length: numProcesses }, (_, i) =>
-    Array.from({ length: numResources }, (_, j) => parseInt(document.getElementById(`max-${i}`).value))
+    Array.from({ length: numResources }, (_, j) => parseInt(document.getElementById(`max-${i}-${j}`).value, 10))
   );
-  available = Array.from({ length: numResources }, (_, j) => parseInt(document.getElementById(`avail-${j}`).value));
+  available = Array.from({ length: numResources }, (_, j) => parseInt(document.getElementById(`avail-${j}`).value, 10));
 
   need = allocation.map((row, i) => row.map((val, j) => maxDemand[i][j] - val));
   finish = Array(numProcesses).fill(false);
   work = available.slice();
   safeSequence = [];
   stepIndex = 0;
+  deadlockCounter = 0;
 
   renderTables();
   document.getElementById('available-box').style.display = 'inline-block';
@@ -79,29 +84,20 @@ function initSimulation(event) {
   document.getElementById('resetBtn').style.display = 'block';
   document.getElementById('status').innerText = '';
 
-  const procContainer = document.getElementById('processes');
-  procContainer.innerHTML = '';
+  const procContainer = document.getElementById('processes'); procContainer.innerHTML = '';
   for (let i = 0; i < numProcesses; i++) {
-    const div = document.createElement('div');
-    div.className = 'process waiting';
-    div.id = `circle-${i}`;
-    div.innerText = `P${i}`;
-    procContainer.appendChild(div);
+    const div = document.createElement('div'); div.className = 'process waiting'; div.id = `circle-${i}`;
+    div.innerText = `P${i}`; procContainer.appendChild(div);
   }
 }
 
 function renderTables() {
   let cont = document.getElementById('tablesContainer');
-  if (!cont) {
-    cont = document.createElement('div');
-    cont.id = 'tablesContainer';
-    document.body.insertBefore(cont, document.getElementById('processes'));
-  }
+  if (!cont) { cont = document.createElement('div'); cont.id = 'tablesContainer';
+    document.body.insertBefore(cont, document.getElementById('processes')); }
   cont.innerHTML = '';
 
-  const table = document.createElement('table');
-  table.border = '1'; table.cellPadding = '8'; table.style.margin = '20px auto';
-
+  const table = document.createElement('table'); table.border = '1'; table.cellPadding = '8'; table.style.margin = '20px auto';
   const hdr = document.createElement('tr');
   hdr.innerHTML = `<th>Proc</th>` +
     Array.from({ length: numResources }, (_, j) => `<th>Alloc R${j}</th>`).join('') +
@@ -110,23 +106,22 @@ function renderTables() {
   table.appendChild(hdr);
 
   for (let i = 0; i < numProcesses; i++) {
-    const tr = document.createElement('tr');
-    tr.id = `row-${i}`;
+    const tr = document.createElement('tr'); tr.id = `row-${i}`;
     let html = `<td>P${i}</td>`;
     allocation[i].forEach(v => html += `<td>${v}</td>`);
     maxDemand[i].forEach(v => html += `<td>${v}</td>`);
     need[i].forEach(v => html += `<td>${v}</td>`);
-    tr.innerHTML = html;
-    table.appendChild(tr);
+    tr.innerHTML = html; table.appendChild(tr);
   }
 
-  const ar = document.createElement('tr');
-  ar.id = 'avail-row';
+  const ar = document.createElement('tr'); ar.id = 'avail-row';
   ar.innerHTML = `<td>Available</td>` + available.map(v => `<td>${v}</td>`).join('') + `<td colspan='${numResources*2}'></td>`;
   table.appendChild(ar);
-
   cont.appendChild(table);
+
   updateAvailableText();
+
+  
 }
 
 function nextStep() {
@@ -240,19 +235,24 @@ function resetCircles() {
   });
 }
 
+// Random Example function (fix IDs)
 function generateRandomExample() {
   numProcesses = Math.floor(Math.random() * 3) + 2;
   numResources = Math.floor(Math.random() * 3) + 1;
   document.getElementById('numProcesses').value = numProcesses;
   document.getElementById('numResources').value = numResources;
   generateInputs();
+  // Random alloc and max
   for (let i = 0; i < numProcesses; i++) {
     for (let j = 0; j < numResources; j++) {
-      document.getElementById(`alloc-${i}`).value = Math.floor(Math.random() * 3);
-      document.getElementById(`max-${i}`).value = Math.floor(Math.random() * 5) + 1;
+      document.getElementById(`alloc-${i}-${j}`).value = Math.floor(Math.random() * 3);
+      document.getElementById(`max-${i}-${j}`).value = Math.floor(Math.random() * 5) + 1;
     }
   }
-  for (let j = 0; j < numResources; j++) document.getElementById(`avail-${j}`).value = Math.floor(Math.random() * 5) + 1;
+  // Random available
+  for (let j = 0; j < numResources; j++) {
+    document.getElementById(`avail-${j}`).value = Math.floor(Math.random() * 5) + 1;
+  }
   initSimulation();
 }
 

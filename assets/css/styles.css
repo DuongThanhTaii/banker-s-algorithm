@@ -365,6 +365,23 @@ tr.row-running {
   background-color: #c8e6c9; /* Xanh lá nhạt khi đang chạy */
 }
 
+/* Cột Proc và Max đậm hơn */
+#tablesContainer th.proc-col,
+#tablesContainer td.proc-col,
+#tablesContainer th.max-col,
+#tablesContainer td.max-col {
+  background-color: #d0d0d0;  /* tone xám đậm hơn */
+}
+
+/* Cột Alloc và Need nhạt hơn */
+#tablesContainer th.alloc-col,
+#tablesContainer td.alloc-col,
+#tablesContainer th.need-col,
+#tablesContainer td.need-col {
+  background-color: #f5f5f5;  /* tone trắng xám nhẹ */
+}
+
+
 /* Hiệu ứng mượt cho toàn bộ layout */
 * {
   transition: all 0.3s ease-in-out;
