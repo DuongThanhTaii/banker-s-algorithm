@@ -2,6 +2,8 @@ let numProcesses, numResources;
 let allocation = [], maxDemand = [], need = [], available = [], finish = [];
 let safeSequence = [], work = [];
 let stepIndex = 0;
+let deadlockCounter = 0;
+
 
 function generateInputs(event) {
   if (event && event.preventDefault) event.preventDefault();
@@ -128,47 +130,81 @@ function renderTables() {
 }
 
 function nextStep() {
-  while (stepIndex < numProcesses) {
-    const i = stepIndex++;
+  clearHighlights();
+  resetCircles();
+
+  if (safeSequence.length === numProcesses) {
+    document.getElementById('status').innerHTML = `<span style="color:#88d498; font-weight:bold;">HỆ THỐNG AN TOÀN!</span> <span style="font-weight:bold;"> TRÌNH TỰ LÀ: ${safeSequence.join(' → ')}</span>`;
+    return;
+  }
+
+  let found = false;
+  let checkedProcesses = 0;
+  let initialStepIndex = stepIndex; // lưu lại để kiểm tra vòng lặp
+
+  while (checkedProcesses < numProcesses) {
+    const i = stepIndex % numProcesses;
+    stepIndex++;
+
     if (!finish[i]) {
-      clearHighlights(); resetCircles();
       const circ = document.getElementById(`circle-${i}`);
       const row = document.getElementById(`row-${i}`);
 
-      if (need[i].every((n,j) => n <= work[j])) {
-        circ.classList.replace('waiting','running'); row.classList.add('row-running'); circ.textContent = `P${i}...`;
-        document.getElementById('doneSound').play();
+      if (need[i].every((n, j) => n <= available[j])) {
+        circ.classList.remove('error');
+        row.classList.remove('error');
+        // Nếu đủ tài nguyên
+        row.classList.add('row-running');
+        circ.classList.replace('waiting', 'running');
+        circ.textContent = `P${i}...`;
+
         setTimeout(() => {
-          circ.classList.replace('running','done'); row.classList.replace('running','done'); circ.textContent = `P${i}`;
+          circ.classList.replace('running', 'done');
+          circ.classList.add('done');
+          row.classList.replace('running', 'done');
+          circ.textContent = `P${i}`;
+          document.getElementById('doneSound').play();
         }, 500);
-        for (let j=0;j<numResources;j++) available[j]+=allocation[i][j]; work = available.slice(); finish[i]=true; safeSequence.push(`P${i}`);
-        updateAvailableRow(); updateAvailableText();
+
+        for (let j = 0; j < numResources; j++) {
+          available[j] += allocation[i][j];
+        }
+        finish[i] = true;
+        work = available.slice();
+        safeSequence.push(`P${i}`);
+        updateAvailableRow();
+        updateAvailableText();
+        found = true;
+        break;
       } else {
-        circ.classList.replace('waiting','error'); row.classList.add('error');
+        // Nếu không đủ tài nguyên => blink đỏ
+        circ.classList.replace('waiting', 'error');
+        circ.classList.add('blink');
+        row.classList.add('error');
         document.getElementById('failSound').play();
+
+        setTimeout(() => circ.classList.remove('blink'), 500);
+        // KHÔNG dừng, xét process tiếp theo ở lần nhấn kế tiếp
       }
+      break; // Chỉ xét đúng 1 tiến trình mỗi lần nhấn
+    }
+    checkedProcesses++;
+  }
+
+  if (!found) {
+    deadlockCounter++;
+
+    if (deadlockCounter >= 2) {
+      document.getElementById('status').innerHTML = `<span style="color:red; font-weight:bold;">HỆ THỐNG BỊ DEADLOCK!</span>`;
+      disableNextStepButton(); // tự disable nút nếu bạn muốn (tạo thêm hàm này)
       return;
     }
   }
-
-  // Sau khi chạy hết:
-  const st = document.getElementById('status');
-  if (safeSequence.length === numProcesses) {
-    st.innerHTML = `<span style="color:#88d498; font-weight: bold;">HỆ THỐNG AN TOÀN!</span> TRÌNH TỰ LÀ: ${safeSequence.join(' → ')}`;
-  } else {
-    st.innerHTML = `<span style="color:red; font-weight: bold;">HỆ THỐNG KHÔNG AN TOÀN!</span>`;
-  }
-
-  // Tô màu toàn bộ các hàng theo trạng thái
-  document.querySelectorAll('#tablesContainer tr').forEach(tr => {
-    if (tr.id.startsWith('row-')) {
-      if (!tr.classList.contains('done') && !tr.classList.contains('error')) {
-        tr.classList.add('waiting');  // Những tiến trình còn lại (chưa done/error)
-      }
-    }
-  });
 }
 
+function disableNextStepButton() {
+  document.getElementById('nextBtn').disabled = true;
+}
 
 function updateAvailableRow() {
   const r = document.getElementById('avail-row');

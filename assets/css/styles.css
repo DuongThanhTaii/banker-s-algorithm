@@ -244,6 +244,22 @@ p {
     }
   }
 
+  .blink {
+    animation: blink-animation 0.6s ease-in-out 1;
+  }
+  
+  @keyframes blink-animation {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); background-color: #f88; }
+    100% { transform: scale(1); }
+  }
+  .process.done {
+    background-color: #4CAF50; /* màu xanh lá cây */
+    color: white;
+    animation: none; /* tắt nhấp nháy nếu còn */
+  }
+  
+
 /* input animation */
 .input-group {
 position: relative;
