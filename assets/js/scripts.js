@@ -51,7 +51,7 @@ function generateInputs(event) {
 
   document.getElementById('detailsForm').style.display = 'block';
 
-  // scroll wheel support
+  // Cuộn chuột tăng step
   document.querySelectorAll('input[type=number]').forEach(input => {
     input.addEventListener('wheel', e => {
       e.preventDefault();
@@ -93,11 +93,18 @@ function initSimulation(event) {
 
 function renderTables() {
   let cont = document.getElementById('tablesContainer');
-  if (!cont) { cont = document.createElement('div'); cont.id = 'tablesContainer';
-    document.body.insertBefore(cont, document.getElementById('processes')); }
+  if (!cont) {
+    cont = document.createElement('div');
+    cont.id = 'tablesContainer';
+    document.body.insertBefore(cont, document.getElementById('processes'));
+  }
   cont.innerHTML = '';
 
-  const table = document.createElement('table'); table.border = '1'; table.cellPadding = '8'; table.style.margin = '20px auto';
+  const table = document.createElement('table');
+  table.border = '1';
+  table.cellPadding = '8';
+  table.style.margin = '20px auto';
+
   const hdr = document.createElement('tr');
   hdr.innerHTML = `<th>Proc</th>` +
     Array.from({ length: numResources }, (_, j) => `<th>Alloc R${j}</th>`).join('') +
@@ -106,27 +113,50 @@ function renderTables() {
   table.appendChild(hdr);
 
   for (let i = 0; i < numProcesses; i++) {
-    const tr = document.createElement('tr'); tr.id = `row-${i}`;
+    const tr = document.createElement('tr');
+    tr.id = `row-${i}`;
     let html = `<td>P${i}</td>`;
     allocation[i].forEach(v => html += `<td>${v}</td>`);
     maxDemand[i].forEach(v => html += `<td>${v}</td>`);
     need[i].forEach(v => html += `<td>${v}</td>`);
-    tr.innerHTML = html; table.appendChild(tr);
+    tr.innerHTML = html;
+    table.appendChild(tr);
   }
 
-  const ar = document.createElement('tr'); ar.id = 'avail-row';
-  ar.innerHTML = `<td>Available</td>` + available.map(v => `<td>${v}</td>`).join('') + `<td colspan='${numResources*2}'></td>`;
+  const ar = document.createElement('tr');
+  ar.id = 'avail-row';
+
+  // Available và để trống phần so sánh ban đầu
+  let availableCells = `<td>Available</td>` + available.map(v => `<td>${v}</td>`).join('');
+  ar.innerHTML = availableCells + `<td id="compareCell" colspan="${numResources * 2}"></td>`;
+
   table.appendChild(ar);
   cont.appendChild(table);
 
   updateAvailableText();
+}
 
-  
+function updateCompareText() {
+  const compareCell = document.getElementById('compareCell');
+  if (!compareCell) return;
+
+  let compareText = '';
+
+  for (let i = 0; i < numProcesses; i++) {
+    if (!finish[i]) { // chỉ xét tiến trình chưa hoàn thành
+      const canAllocate = need[i].every((n, j) => n <= available[j]);
+      compareText = `Available (${available.join(', ')}) ${canAllocate ? '≥' : '<'} Need of P${i} (${need[i].join(', ')}) ${canAllocate ? '✔️' : '❌'}`;
+      break;
+    }
+  }
+
+  compareCell.textContent = compareText;
 }
 
 function nextStep() {
   clearHighlights();
   resetCircles();
+  updateCompareText();
 
   if (safeSequence.length === numProcesses) {
     document.getElementById('status').innerHTML = `<span style="color:#88d498; font-weight:bold;">HỆ THỐNG AN TOÀN!</span> <span style="font-weight:bold;"> TRÌNH TỰ LÀ: ${safeSequence.join(' → ')}</span>`;
@@ -135,7 +165,7 @@ function nextStep() {
 
   let found = false;
   let checkedProcesses = 0;
-  let initialStepIndex = stepIndex; // lưu lại để kiểm tra vòng lặp
+  let initialStepIndex = stepIndex;
 
   while (checkedProcesses < numProcesses) {
     const i = stepIndex % numProcesses;
@@ -179,9 +209,8 @@ function nextStep() {
         document.getElementById('failSound').play();
 
         setTimeout(() => circ.classList.remove('blink'), 500);
-        // KHÔNG dừng, xét process tiếp theo ở lần nhấn kế tiếp
       }
-      break; // Chỉ xét đúng 1 tiến trình mỗi lần nhấn
+      break;
     }
     checkedProcesses++;
   }
@@ -191,7 +220,7 @@ function nextStep() {
 
     if (deadlockCounter >= 2) {
       document.getElementById('status').innerHTML = `<span style="color:red; font-weight:bold;">HỆ THỐNG BỊ DEADLOCK!</span>`;
-      disableNextStepButton(); // tự disable nút nếu bạn muốn (tạo thêm hàm này)
+      disableNextStepButton();
       return;
     }
   }
@@ -235,14 +264,14 @@ function resetCircles() {
   });
 }
 
-// Random Example function (fix IDs)
+// Random 
 function generateRandomExample() {
   numProcesses = Math.floor(Math.random() * 3) + 2;
   numResources = Math.floor(Math.random() * 3) + 1;
   document.getElementById('numProcesses').value = numProcesses;
   document.getElementById('numResources').value = numResources;
   generateInputs();
-  // Random alloc and max
+  // Random alloc và max
   for (let i = 0; i < numProcesses; i++) {
     for (let j = 0; j < numResources; j++) {
       document.getElementById(`alloc-${i}-${j}`).value = Math.floor(Math.random() * 3);

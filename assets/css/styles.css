@@ -455,8 +455,9 @@ tr.row-running {
     display: none;
   }
   #randomBtn {
-    bottom: -10px; /* Đẩy nút random lên cao hơn */
-    right: px;
+    bottom: -20px; /* Đẩy nút random lên cao hơn */
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
 }
 
