@@ -10,6 +10,34 @@ p {
     text-align: center;
     padding: 20px;
   }
+
+#logoschool {
+  position: absolute;
+  top: 15px;
+  left: 10px;
+  width: 150px;
+}
+
+#logokhoa {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 100px;
+}
+#logoschool:hover {
+  position: fixed;
+  top: 15px;
+  left: 10px;
+  width: 155px;
+}
+#logokhoa:hover {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 105px;
+}
+
+
   .process {
     display: inline-block;
     width: 100px;
@@ -460,6 +488,32 @@ tr.row-running {
     bottom: -20px; /* Đẩy nút random lên cao hơn */
     left: 50%;
     transform: translate(-50%, -50%);
+  }
+
+  #logoschool {
+    position: absolute;
+    top: 15px;
+    left: 10px;
+    width: 70px;
+  }
+  
+  #logokhoa {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 50px;
+  }
+  #logoschool:hover {
+    position: fixed;
+    top: 15px;
+    left: 10px;
+    width: 75px;
+  }
+  #logokhoa:hover {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 55px;
   }
 }
 
