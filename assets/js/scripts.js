@@ -3,6 +3,7 @@ let allocation = [], maxDemand = [], need = [], available = [], finish = [];
 let safeSequence = [], work = [];
 let stepIndex = 0;
 let deadlockCounter = 0;
+let currentProcessIndex = 0;
 
 
 function generateInputs(event) {
@@ -141,17 +142,28 @@ function updateCompareText() {
   if (!compareCell) return;
 
   let compareText = '';
+  let checked = 0;
+  let idx = stepIndex; // Dùng biến giống nextStep
 
-  for (let i = 0; i < numProcesses; i++) {
-    if (!finish[i]) { // chỉ xét tiến trình chưa hoàn thành
+  while (checked < numProcesses) {
+    const i = idx % numProcesses;
+    if (!finish[i]) {
       const canAllocate = need[i].every((n, j) => n <= available[j]);
       compareText = `Available (${available.join(', ')}) ${canAllocate ? '≥' : '<'} Need of P${i} (${need[i].join(', ')}) ${canAllocate ? '✔️' : '❌'}`;
       break;
     }
+    idx++;
+    checked++;
   }
 
   compareCell.textContent = compareText;
+
+  // // Nếu tất cả đều đã xong
+  if (finish.every(f => f)) {
+    compareCell.textContent = "Tất cả tiến trình đã hoàn thành 🎉";
+  }
 }
+
 
 function nextStep() {
   clearHighlights();
@@ -176,20 +188,22 @@ function nextStep() {
       const row = document.getElementById(`row-${i}`);
 
       if (need[i].every((n, j) => n <= available[j])) {
-        circ.classList.remove('error');
+        circ.classList.remove('waiting');
         row.classList.remove('error');
-        // Nếu đủ tài nguyên
+        circ.classList.add('running');
         row.classList.add('row-running');
-        circ.classList.replace('waiting', 'running');
         circ.textContent = `P${i}...`;
 
+        // Để trình duyệt kịp render trạng thái "running"
         setTimeout(() => {
-          circ.classList.replace('running', 'done');
+          circ.classList.remove('running');
           circ.classList.add('done');
-          row.classList.replace('running', 'done');
+          row.classList.remove('row-running');
+          row.classList.add('done');
           circ.textContent = `P${i}`;
           document.getElementById('doneSound').play();
-        }, 500);
+        }, 500); // hoặc 1000 nếu animation của bạn dài hơn
+
 
         for (let j = 0; j < numResources; j++) {
           available[j] += allocation[i][j];

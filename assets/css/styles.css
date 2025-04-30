@@ -354,6 +354,8 @@ color: green;
 color: red;
 }
 
+
+
 /* tables */
 /* Container của bảng */
 #tablesContainer table {
@@ -517,6 +519,10 @@ tr.row-running {
   }
 }
 
+::-webkit-scrollbar {
+	display: none;
+}
+
 /* Responsive nâng cao cho Tablet */
 @media (max-width: 1024px) and (min-width: 601px) {
   /* Căn chỉnh lại input form */
@@ -544,3 +550,4 @@ tr.row-running {
     font-size: 15px;
   }
 }
+
